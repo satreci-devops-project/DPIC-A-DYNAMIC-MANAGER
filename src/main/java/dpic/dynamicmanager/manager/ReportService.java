@@ -2,6 +2,7 @@ package dpic.dynamicmanager.manager;
 
 import dpic.dynamicmanager.manager.domain.Coverage;
 import dpic.dynamicmanager.manager.domain.EntireCoverage;
+import dpic.dynamicmanager.manager.dto.DynamicAnalysisResultRequestDTO;
 import dpic.dynamicmanager.manager.dto.RegisterBuildRequestDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,7 +32,7 @@ public class ReportService {
     @Value("${jenkins.api.server.user-token}")
     private String token;
 
-    private final ReportRepository reportRepository;
+    private final DynamicAnalysisResultRepository dynamicAnalysisResultRepository;
     private final String [] coverageType = {
             "branchCoverage",
             "classCoverage",
@@ -51,6 +52,28 @@ public class ReportService {
 
     public void reportCoverage(RegisterBuildRequestDTO registerBuildRequestDTO) {
         EntireCoverage entireCoverage = readCoverageJson(registerBuildRequestDTO);
+        DynamicAnalysisResultRequestDTO dynamicAnalysisResultRequestDTO = dynamicAnalysisResultRequestDTOMapper(
+                entireCoverage,
+                registerBuildRequestDTO
+        );
+        dynamicAnalysisResultRepository.save(dynamicAnalysisResultRequestDTO);
+    }
+
+    public DynamicAnalysisResultRequestDTO dynamicAnalysisResultRequestDTOMapper(
+            EntireCoverage entireCoverage,
+            RegisterBuildRequestDTO registerBuildRequestDTO
+    ) {
+        DynamicAnalysisResultRequestDTO dynamicAnalysisResultRequestDTO = new DynamicAnalysisResultRequestDTO(
+                        registerBuildRequestDTO.getJobName(),
+                Math.round(entireCoverage.getBranchCoverage().getPercentageFloat()*100)/100.0,
+                Math.round(entireCoverage.getClassCoverage().getPercentageFloat()*100)/100.0,
+                Math.round(entireCoverage.getComplexityScore().getPercentageFloat()*100)/100.0,
+                Math.round(entireCoverage.getInstructionCoverage().getPercentageFloat()*100)/100.0,
+                Math.round(entireCoverage.getLineCoverage().getPercentageFloat()*100)/100.0,
+                Math.round(entireCoverage.getMethodCoverage().getPercentageFloat()*100)/100.0
+        );
+
+        return dynamicAnalysisResultRequestDTO;
     }
 
     public String makeCoverageUrl(RegisterBuildRequestDTO registerBuildRequestDTO) {

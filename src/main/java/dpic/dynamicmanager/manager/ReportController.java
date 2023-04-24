@@ -23,6 +23,6 @@ public class ReportController {
                 registerBuildRequestDTO.getJobName(),
                 registerBuildRequestDTO.getBuildNo()
         );
-        reportService.readJacocoJson(registerBuildRequestDTO);
+        reportService.reportCoverage(registerBuildRequestDTO);
     }
 }
